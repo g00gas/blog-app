@@ -1,16 +1,27 @@
 package server
 
 import (
+	"blog-app-backend/internal/config"
 	"blog-app-backend/internal/handler"
+	"blog-app-backend/internal/middleware"
+	"log"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
 )
 
 func StartServer() {
-	r := gin.Default()
-	registerRoutes(r, &handler.HelloHandler{})
-	r.Run()
+	db := config.InitDB()
+	r := gin.New()
+	r.Use(
+		gin.Logger(),
+		gin.Recovery(),
+		middleware.UseDatabase(db))
+	registerRoutes(r, &handler.PostsHandler{})
+	err := r.Run("localhost:8081")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func registerRoutes(r *gin.Engine, h handler.Handler) {
