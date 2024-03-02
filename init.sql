@@ -14,6 +14,6 @@ CREATE TABLE comments (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO posts (title, content) VALUES ('Hello world!', 'Hello dear world content');
+INSERT INTO posts (title, content, author) VALUES ('Hello world!', 'Hello dear world content', 'baz@bar.com');
 
 INSERT INTO comments (post_id, author, content) VALUES (1, 'foo@baz.com', 'u suck lol');
