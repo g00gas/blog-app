@@ -4,6 +4,7 @@ import (
 	"blog-app-backend/internal/models"
 	"context"
 	"fmt"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -65,7 +66,7 @@ func GetPostById(ctx *gin.Context, postId int) (*models.Post, error) {
 
 func CreateNewPost(ctx *gin.Context, newPost models.CreatePostRequest) (*models.Post, error) {
 	db := ctx.MustGet("DB").(*pgxpool.Pool)
-	sql, args, err := psql.Insert("posts").Columns("title", "content").Values(newPost.Title, newPost.Content).Suffix("RETURNING \"post_id\"").ToSql()
+	sql, args, err := psql.Insert("posts").Columns("title", "content", "author").Values(newPost.Title, newPost.Content, newPost.Author).Suffix("RETURNING \"post_id\"").ToSql()
 
 	//post := models.Post{}
 	var newPostId int
@@ -88,4 +89,23 @@ func CreateNewPost(ctx *gin.Context, newPost models.CreatePostRequest) (*models.
 	}
 
 	return post, nil
+}
+
+func DeletePostById(ctx *gin.Context, postId int) (bool, error) {
+	db := ctx.MustGet("DB").(*pgxpool.Pool)
+	sql, args, err := psql.Delete("posts").Where(squirrel.Eq{"post_id": postId}).ToSql()
+
+	if err != nil {
+		fmt.Printf("Error generating SQL: %s\n", err)
+		return false, err
+	}
+
+	query := db.QueryRow(ctx, sql, args...)
+	err = query.Scan()
+	if err != nil {
+		fmt.Printf("Error deleting a post.")
+	}
+
+	return true, nil
+
 }

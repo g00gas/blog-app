@@ -4,20 +4,22 @@ import (
 	"blog-app-backend/internal/models"
 	"blog-app-backend/internal/repository/postsRepository"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type PostsHandler struct{}
 
 func (h *PostsHandler) RegisterRoutes(r *gin.RouterGroup) {
-	postsGroup := r.Group("/posts")
+	postsGroup := r.Group("/api/posts")
 	{
 		postsGroup.GET("/", h.getAllPosts)
 		postsGroup.GET("/:id", h.getPostById)
 		postsGroup.POST("/", h.createPost)
+		postsGroup.DELETE("/:id", h.deletePost)
 	}
 }
 
@@ -56,5 +58,21 @@ func (h *PostsHandler) createPost(ctx *gin.Context) {
 			return
 		}
 		ctx.JSON(http.StatusCreated, post)
+	}
+}
+
+func (h *PostsHandler) deletePost(ctx *gin.Context) {
+	idParam := ctx.Param("id")
+	if id, err := strconv.Atoi(idParam); err == nil {
+		res, err := postsRepository.DeletePostById(ctx, id)
+		if err != nil {
+			log.Panicf("Error deleting a post: %v", err)
+			return
+		}
+		if res {
+			ctx.Status(http.StatusNoContent)
+		}
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Post with %s not found!", idParam)})
 	}
 }
